@@ -1,0 +1,27 @@
+[package]
+name = "plot-commands"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+plotters = ["dep:plotters"]
+builder = []
+default = []
+
+[dependencies]
+derive_more = "0.99.18"
+itertools = "0.13.0"
+rgb = { version = "0.8.40", features = ["serde"] }
+
+plotters = { version = "0.3.6", optional = true }
+
+
+
+
+# TODO: use `enable-features` when it will be added to Cargo.
+# https://github.com/rust-lang/cargo/issues/4663
+# https://github.com/rust-lang/rfcs/pull/3374
+# [[example]]
+# name = "simple-plot"
+# required-features = [ "builder", "plotters" ]
+# enable-features = [ "builder", "plotters" ]
