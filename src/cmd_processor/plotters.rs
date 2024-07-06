@@ -1,13 +1,14 @@
+use image::imageops::FilterType;
 use rgb::RGBA;
 use std::path::PathBuf;
 
 use itertools::{chain, izip};
 use plotters::{
     backend::{BitMapBackend, DrawingBackend},
-    chart::{ChartBuilder, ChartContext, SeriesAnno, SeriesLabelStyle},
+    chart::{ChartBuilder, ChartContext, LabelAreaPosition, SeriesAnno, SeriesLabelStyle},
     coord::{types::RangedCoordf32, CoordTranslate, Shift},
     drawing::{DrawingArea, IntoDrawingArea},
-    element::PathElement,
+    element::{BitMapElement, Circle, PathElement},
     prelude::Cartesian2d,
     series::{DashedLineSeries, LineSeries},
     style::{Color, RGBAColor, ShapeStyle},
@@ -62,8 +63,9 @@ impl PlottersProcessor {
         chart: &mut ChartContext<impl DrawingBackend, Cartesian2d<RangedCoordf32, RangedCoordf32>>,
         series: &ChartSeries,
     ) {
+        use crate::draw_command::chart::series_ty::ChartSeriesType as CST;
         match series.chart_series_type {
-            crate::draw_command::chart::series_ty::ChartSeriesType::Line(line) => {
+            CST::Line(line) => {
                 if line.dashed {
                     let s = DashedLineSeries::new(
                         series.data.clone(),
@@ -75,13 +77,30 @@ impl PlottersProcessor {
                     self.configure_series(s, series);
                 } else {
                     let style = series.style;
-                    let s = LineSeries::new(series.data.clone(), convert_style(style));
+                    // TODO: configure stroke width
+                    let s =
+                        LineSeries::new(series.data.clone(), convert_style(style).stroke_width(1));
                     let s = chart.draw_series(s).unwrap();
                     self.configure_series(s, series);
                 }
             }
-            crate::draw_command::chart::series_ty::ChartSeriesType::Scatter => {
-                todo!()
+            CST::Scatter(scatter) => {
+                let color = convert_color(series.style.color);
+                let color = if scatter.filled {
+                    color.filled()
+                } else {
+                    color.into()
+                };
+
+                let s = chart
+                    .draw_series(
+                        series
+                            .data
+                            .iter()
+                            .map(|(x, y)| Circle::new((*x, *y), 2, color)),
+                    )
+                    .unwrap();
+                self.configure_series(s, series);
             }
         };
     }
@@ -105,12 +124,17 @@ impl PlottersProcessor {
         let y_range = y_bounds.unwrap_or(DataBound::zero()).as_range();
         let y_range_r = y_bounds_r.unwrap_or(DataBound::zero()).as_range();
 
+        let m = 40;
+
+        let right_margin = if chart_cmd.series_r.is_empty() { 0 } else { m };
+
         let mut chart = ChartBuilder::on(area)
             .caption(&chart_cmd.title, ("sans-serif", 20))
-            .margin(5)
-            .x_label_area_size(40)
-            .y_label_area_size(40)
-            .right_y_label_area_size(if chart_cmd.series_r.is_empty() { 0 } else { 40 })
+            .margin(0)
+            .margin_right(m - right_margin)
+            .x_label_area_size(m)
+            .y_label_area_size(m)
+            .right_y_label_area_size(right_margin)
             .build_cartesian_2d(x_range.clone(), y_range)
             .unwrap()
             .set_secondary_coord(x_range, y_range_r);
@@ -148,16 +172,61 @@ impl PlottersProcessor {
         }
     }
 
+    fn process_image(
+        &self,
+        area: &DrawingArea<impl DrawingBackend, Shift>,
+        image: &crate::draw_command::image::Image,
+    ) {
+        let mut chart = ChartBuilder::on(&area);
+        if !image.title.is_empty() {
+            chart.caption("Bitmap Example", ("sans-serif", 20));
+        }
+        let mut chart = chart
+            .margin(5)
+            .set_label_area_size(LabelAreaPosition::Left, 40)
+            .set_label_area_size(LabelAreaPosition::Bottom, 40)
+            .build_cartesian_2d(0.0..1.0, 0.0..1.0)
+            .unwrap();
+
+        chart.configure_mesh().disable_mesh().draw().unwrap();
+
+        let (w, h) = chart.plotting_area().dim_in_pixel();
+        let image = image.to_image_dynamic_image().resize_exact(
+            w - w / 10,
+            h - h / 10,
+            FilterType::Nearest,
+        );
+
+        let elem: BitMapElement<_> = ((0.05, 0.95), image).into();
+
+        chart.draw_series(std::iter::once(elem)).unwrap();
+    }
+
     fn process_layout(&self, area: &DrawingArea<impl DrawingBackend, Shift>, layout: &Layout) {
+        use crate::draw_command::layout::Layout;
         match layout {
-            crate::draw_command::layout::Layout::VSplit(cmds) => {
+            Layout::Box(cmd) => {
+                self.process_command(&area, cmd);
+            }
+            Layout::VSplit(cmds) => {
                 let areas = area.split_evenly((cmds.len(), 1));
                 for (area, cmd) in izip!(areas, cmds) {
                     self.process_command(&area, cmd);
                 }
             }
-            crate::draw_command::layout::Layout::HSplit(cmds) => {
+            Layout::HSplit(cmds) => {
                 let areas = area.split_evenly((1, cmds.len()));
+                for (area, cmd) in izip!(areas, cmds) {
+                    self.process_command(&area, cmd);
+                }
+            }
+            Layout::Grid {
+                commands: cmds,
+                constraint,
+            } => {
+                let (rows, cols) = constraint.calculate_rows_cols(cmds.len());
+
+                let areas = area.split_evenly((rows, cols));
                 for (area, cmd) in izip!(areas, cmds) {
                     self.process_command(&area, cmd);
                 }
@@ -167,7 +236,9 @@ impl PlottersProcessor {
 
     fn process_command(&self, area: &DrawingArea<impl DrawingBackend, Shift>, cmd: &DrawComand) {
         match cmd {
+            DrawComand::Blank => {}
             DrawComand::Chart(chart) => self.process_chart(area, chart),
+            DrawComand::Image(image) => self.process_image(area, &image),
             DrawComand::Layout(layout) => self.process_layout(area, layout),
         }
     }

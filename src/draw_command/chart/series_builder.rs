@@ -55,6 +55,16 @@ impl ChartSeriesBuilder {
         self
     }
 
+    pub fn scatter(mut self) -> Self {
+        self.s.chart_series_type = self.s.chart_series_type.scatter();
+        self
+    }
+
+    pub fn scatter_not_filled(mut self) -> Self {
+        self.s.chart_series_type = self.s.chart_series_type.scatter_not_filled();
+        self
+    }
+
     pub fn build(self) -> ChartSeries {
         self.s
     }

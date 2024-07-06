@@ -1,13 +1,17 @@
 pub mod chart;
+pub mod image;
 pub mod layout;
 
+use self::image::Image;
 use chart::chart::Chart;
 use derive_more::From;
 use layout::Layout;
 
 #[derive(Debug, Clone, From)]
 pub enum DrawComand {
+    Blank,
     Chart(Box<Chart>),
+    Image(Box<Image>),
     Layout(Box<Layout>),
 }
 
@@ -46,6 +50,7 @@ pub mod with_plotters {
 mod conversions {
     use super::{
         chart::{chart_builder::ChartBuilder, IntoChart},
+        layout::layout_builder::LayoutBuilder,
         DrawComand,
     };
 
@@ -64,14 +69,31 @@ mod conversions {
             DrawComand::from(self.into_chart())
         }
     }
+
+    impl IntoDrawCommand for LayoutBuilder {
+        fn into_draw_command(self) -> DrawComand {
+            DrawComand::from(self.build())
+        }
+    }
+
     pub fn plot(cmd: impl IntoDrawCommand) -> DrawComand {
         cmd.into_draw_command()
     }
 
+    pub fn plot_image(image: impl Into<super::image::Image>) -> DrawComand {
+        DrawComand::Image(Box::new(image.into()))
+    }
+
     pub fn plot_chart(f: impl FnOnce(ChartBuilder) -> ChartBuilder) -> DrawComand {
-        let cb = ChartBuilder::default();
-        let cb = f(cb);
-        plot(cb.build())
+        let b = ChartBuilder::default();
+        let b = f(b);
+        plot(b.build())
+    }
+
+    pub fn plot_layout(f: impl FnOnce(LayoutBuilder) -> LayoutBuilder) -> DrawComand {
+        let b = LayoutBuilder::default();
+        let b = f(b);
+        plot(b)
     }
 }
 

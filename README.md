@@ -8,3 +8,8 @@ Some of the examples require various features. To enable them, add `--features="
 ```
 cargo run --example simple-plot --features="builder plotters"
 ```
+For simplicity, if the `all` feature is specified, all the examples can be ran without specifying specific dependencies.
+
+```
+cargo run --example simple-plot --features=all
+```

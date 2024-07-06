@@ -10,9 +10,20 @@ impl std::default::Default for ChartSeriesLineConfig {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub struct ChartSeriesScatterConfig {
+    pub filled: bool,
+}
+
+impl std::default::Default for ChartSeriesScatterConfig {
+    fn default() -> Self {
+        Self { filled: true }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum ChartSeriesType {
     Line(ChartSeriesLineConfig),
-    Scatter,
+    Scatter(ChartSeriesScatterConfig),
 }
 
 impl std::default::Default for ChartSeriesType {
@@ -33,5 +44,13 @@ impl ChartSeriesType {
         let mut line = self.get_line().unwrap_or_default();
         line.dashed = true;
         Self::Line(line)
+    }
+
+    pub fn scatter(self) -> Self {
+        Self::Scatter(Default::default())
+    }
+
+    pub fn scatter_not_filled(self) -> Self {
+        Self::Scatter(ChartSeriesScatterConfig { filled: false })
     }
 }

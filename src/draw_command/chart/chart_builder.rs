@@ -34,7 +34,10 @@ impl ChartBuilder {
         self
     }
 
-    pub fn add_series_l_with(self, f: impl Fn(ChartSeriesBuilder) -> ChartSeriesBuilder) -> Self {
+    pub fn add_series_l_with(
+        self,
+        f: impl FnOnce(ChartSeriesBuilder) -> ChartSeriesBuilder,
+    ) -> Self {
         let csb = ChartSeriesBuilder::default();
         self.add_series_l(f(csb))
     }
@@ -44,7 +47,10 @@ impl ChartBuilder {
         self
     }
 
-    pub fn add_series_r_with(self, f: impl Fn(ChartSeriesBuilder) -> ChartSeriesBuilder) -> Self {
+    pub fn add_series_r_with(
+        self,
+        f: impl FnOnce(ChartSeriesBuilder) -> ChartSeriesBuilder,
+    ) -> Self {
         let csb = ChartSeriesBuilder::default();
         self.add_series_r(f(csb))
     }
