@@ -3,7 +3,11 @@ pub mod layout_builder;
 
 use super::DrawComand;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridConstraint {
     Rows(usize),
     Columns(usize),
@@ -19,6 +23,7 @@ impl GridConstraint {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Layout {
     Box(Box<DrawComand>),
     VSplit(Vec<DrawComand>),

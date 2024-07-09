@@ -2,7 +2,11 @@ use crate::data_bound::DataBound;
 
 use super::series::ChartSeries;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Chart {
     /// Primary series, associated with the left y-axis.
     pub series_l: Vec<ChartSeries>,

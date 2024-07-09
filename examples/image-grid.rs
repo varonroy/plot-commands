@@ -1,7 +1,7 @@
 #[cfg(all(feature = "builder", feature = "plotters"))]
 fn main() {
     use itertools::Itertools;
-    use plot_commands::draw_command::{plot_image, plot_layout};
+    use plot_commands::draw_command::{plot_image_with, plot_layout};
 
     fn gen_image(seed: u32) -> Vec<Vec<f32>> {
         let s = seed as f32;
@@ -35,13 +35,13 @@ fn main() {
 
     plot_layout(|b| {
         b.grid_with_rows(
-            vec![
-                plot_image(gen_image(0)),
-                plot_image(gen_image(1)),
-                plot_image(gen_image(2)),
-                plot_image(gen_image_rgb(0)),
-                plot_image(gen_image_rgb(1)),
-                plot_image(gen_image_rgb(2)),
+            [
+                plot_image_with(gen_image(0), |b| b.axes()),
+                plot_image_with(gen_image(1), |b| b.axes()),
+                plot_image_with(gen_image(2), |b| b.axes()),
+                plot_image_with(gen_image_rgb(0), |b| b.axes()),
+                plot_image_with(gen_image_rgb(1), |b| b.axes()),
+                plot_image_with(gen_image_rgb(2), |b| b.axes()),
             ],
             3,
         )

@@ -7,7 +7,11 @@ use chart::chart::Chart;
 use derive_more::From;
 use layout::Layout;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, From)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DrawComand {
     Blank,
     Chart(Box<Chart>),
@@ -18,6 +22,12 @@ pub enum DrawComand {
 impl From<Chart> for DrawComand {
     fn from(value: Chart) -> Self {
         Self::Chart(Box::new(value))
+    }
+}
+
+impl From<Image> for DrawComand {
+    fn from(value: Image) -> Self {
+        Self::Image(Box::new(value))
     }
 }
 
@@ -50,6 +60,7 @@ pub mod with_plotters {
 mod conversions {
     use super::{
         chart::{chart_builder::ChartBuilder, IntoChart},
+        image::{builder::ImageBuilder, Image},
         layout::layout_builder::LayoutBuilder,
         DrawComand,
     };
@@ -76,12 +87,27 @@ mod conversions {
         }
     }
 
+    impl IntoDrawCommand for Image {
+        fn into_draw_command(self) -> DrawComand {
+            DrawComand::from(self)
+        }
+    }
+
     pub fn plot(cmd: impl IntoDrawCommand) -> DrawComand {
         cmd.into_draw_command()
     }
 
     pub fn plot_image(image: impl Into<super::image::Image>) -> DrawComand {
         DrawComand::Image(Box::new(image.into()))
+    }
+
+    pub fn plot_image_with(
+        img: impl Into<Image>,
+        f: impl FnOnce(ImageBuilder) -> ImageBuilder,
+    ) -> DrawComand {
+        let b: ImageBuilder = img.into().into();
+        let b = f(b);
+        plot(b.build())
     }
 
     pub fn plot_chart(f: impl FnOnce(ChartBuilder) -> ChartBuilder) -> DrawComand {

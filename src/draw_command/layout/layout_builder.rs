@@ -26,16 +26,16 @@ impl LayoutBuilder {
         LayoutBuilder(Layout::HSplit(cmds.into_iter().collect()))
     }
 
-    pub fn grid_with_rows(self, cmds: Vec<DrawComand>, rows: usize) -> Self {
+    pub fn grid_with_rows(self, cmds: impl IntoIterator<Item = DrawComand>, rows: usize) -> Self {
         LayoutBuilder(Layout::Grid {
-            commands: cmds,
+            commands: cmds.into_iter().collect(),
             constraint: super::GridConstraint::Rows(rows),
         })
     }
 
-    pub fn grid_with_cols(self, cmds: Vec<DrawComand>, cols: usize) -> Self {
+    pub fn grid_with_cols(self, cmds: impl IntoIterator<Item = DrawComand>, cols: usize) -> Self {
         LayoutBuilder(Layout::Grid {
-            commands: cmds,
+            commands: cmds.into_iter().collect(),
             constraint: super::GridConstraint::Columns(cols),
         })
     }

@@ -6,10 +6,11 @@ authors = ["Roy <varonroy@gmail.com>"]
 repository = "https://github.com/varonroy/plot-commands"
 
 [features]
+serde = ["dep:serde"]
 builder = []
 plotters = ["dep:plotters"]
 all = ["builder", "plotters"]
-default = []
+default = ["serde"]
 
 [dependencies]
 derive_more = "0.99.18"
@@ -19,6 +20,7 @@ rgb = { version = "^0.8.34", features = ["serde"] }
 plotters = { version = "^0.3.4", features = ["image"], optional = true }
 image = { version = "^0.24.0" }
 float-ord = "0.3.2"
+serde = { version = "1.0.203", features = ["derive"], optional = true}
 
 
 

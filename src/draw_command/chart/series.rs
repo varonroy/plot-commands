@@ -2,7 +2,11 @@ use crate::{data_bound::DataBound2D, map_reduce::MapReduce};
 
 use super::{series_style::SeriesStyle, series_ty::ChartSeriesType};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ChartSeries {
     pub name: String,
     pub data: Vec<(f32, f32)>,

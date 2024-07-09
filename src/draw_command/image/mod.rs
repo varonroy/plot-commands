@@ -3,7 +3,14 @@ use std::io::Cursor;
 use float_ord::FloatOrd;
 use image::DynamicImage;
 
+#[cfg(feature = "builder")]
+pub mod builder;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ImageFormat {
     /// No compression, raw pixel data
     Buffer,
@@ -22,13 +29,42 @@ impl From<image::ImageFormat> for ImageFormat {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ImageStyle {
+    pub draw_axes: bool,
+}
+
+impl std::default::Default for ImageStyle {
+    fn default() -> Self {
+        Self { draw_axes: false }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Image {
     pub title: String,
     pub buffer: Vec<u8>,
     pub format: ImageFormat,
     pub rows: usize,
     pub cols: usize,
+    pub style: ImageStyle,
 }
+
+// #[cfg(feature = "builder")]
+// pub use conversions::*;
+
+// #[cfg(feature = "builder")]
+// mod conversions {
+//     use super::builder::ImageBuilder;
+//     use super::Image;
+//
+//     impl From<ImageBuilder> for Image {
+//         fn from(value: ImageBuilder) -> Self {
+//             value.build()
+//         }
+//     }
+// }
 
 impl From<DynamicImage> for Image {
     fn from(value: DynamicImage) -> Self {
@@ -44,6 +80,7 @@ impl From<DynamicImage> for Image {
             format: format.into(),
             rows: value.height() as _,
             cols: value.width() as _,
+            style: Default::default(),
         }
     }
 }

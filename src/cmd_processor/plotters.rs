@@ -181,23 +181,33 @@ impl PlottersProcessor {
         if !image.title.is_empty() {
             chart.caption("Bitmap Example", ("sans-serif", 20));
         }
+
+        let (m, ms) = if image.style.draw_axes {
+            (10, 20)
+        } else {
+            (0, 0)
+        };
+
         let mut chart = chart
-            .margin(5)
-            .set_label_area_size(LabelAreaPosition::Left, 40)
-            .set_label_area_size(LabelAreaPosition::Bottom, 40)
+            .margin(m)
+            .set_label_area_size(LabelAreaPosition::Left, ms)
+            .set_label_area_size(LabelAreaPosition::Bottom, ms)
             .build_cartesian_2d(0.0..1.0, 0.0..1.0)
             .unwrap();
 
         chart.configure_mesh().disable_mesh().draw().unwrap();
 
         let (w, h) = chart.plotting_area().dim_in_pixel();
-        let image = image.to_image_dynamic_image().resize_exact(
-            w - w / 10,
-            h - h / 10,
-            FilterType::Nearest,
-        );
 
-        let elem: BitMapElement<_> = ((0.05, 0.95), image).into();
+        let image = image
+            .to_image_dynamic_image()
+            .resize(w, h, FilterType::Nearest);
+
+        let (im, ih) = (image.width(), image.height());
+        let offset_w = (w - im) as f64 / (w as f64) * 0.5;
+        let offset_h = 1.0 - (h - ih) as f64 / (h as f64) * 0.5;
+
+        let elem: BitMapElement<_> = ((offset_w, offset_h), image).into();
 
         chart.draw_series(std::iter::once(elem)).unwrap();
     }
