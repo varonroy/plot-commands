@@ -26,7 +26,7 @@ impl Chart {
             .series_l
             .iter()
             .filter_map(|seires| seires.bounds())
-            .reduce(|acc, x| acc.max(x));
+            .reduce(|acc, x| acc.extend_to_include_bound2d(x));
         let lx = l.map(|b| b.x);
         let ly = l.map(|b| b.y);
 

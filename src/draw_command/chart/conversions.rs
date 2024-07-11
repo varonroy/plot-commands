@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chart::Chart;
 use chart_builder::ChartBuilder;
 use series::ChartSeries;
@@ -20,6 +22,26 @@ impl IntoChart for Chart {
 impl IntoChart for ChartBuilder {
     fn into_chart(self) -> Chart {
         self.build()
+    }
+}
+
+// TODO: use a generic `IntoChartComponent` and use a macro to extend this to tuples of
+// many sizes
+impl<T: IntoData, S: ToString, ST: ToString> IntoChart for (HashMap<S, T>, ST) {
+    fn into_chart(self) -> Chart {
+        let mut c = self.0.into_chart();
+        c.title = self.1.to_string();
+        c
+    }
+}
+
+impl<T: IntoData, S: ToString> IntoChart for HashMap<S, T> {
+    fn into_chart(self) -> Chart {
+        self.into_iter()
+            .fold(ChartBuilder::default(), |acc, (name, data)| {
+                acc.add_series_l((data, name))
+            })
+            .build()
     }
 }
 
@@ -53,6 +75,8 @@ impl<T: IntoData> IntoChartSeriesBuilder for T {
     }
 }
 
+// TODO: use a generic `ChartSeriesBuilderComponent` and use a macro to extend this to tuples of
+// many sizes
 impl<T: IntoData, S: ToString> IntoChartSeriesBuilder for (T, S) {
     fn into_series_builder(self) -> ChartSeriesBuilder {
         ChartSeriesBuilder::default()

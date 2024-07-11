@@ -1,6 +1,9 @@
 #[cfg(all(feature = "builder", feature = "plotters"))]
 fn main() {
-    use plot_commands::draw_command::plot_chart;
+    use plot_commands::draw_command::{plot, plot_chart};
+
+    plot([1, 2, 3]);
+    plot([(1, 1), (2, 2)]);
 
     plot_chart(|b| {
         b.add_series_l(([1, 3, 0], "left"))
