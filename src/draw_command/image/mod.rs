@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use float_ord::FloatOrd;
-use image::DynamicImage;
+use image::{DynamicImage, ImageBuffer};
 
 #[cfg(feature = "builder")]
 pub mod builder;
@@ -80,6 +80,31 @@ impl From<DynamicImage> for Image {
             format: format.into(),
             rows: value.height() as _,
             cols: value.width() as _,
+            style: Default::default(),
+        }
+    }
+}
+
+impl<P, C> From<ImageBuffer<P, C>> for Image
+where
+    P: image::Pixel + image::PixelWithColorType,
+    [P::Subpixel]: image::EncodableLayout,
+    C: std::ops::Deref<Target = [P::Subpixel]>,
+    DynamicImage: From<ImageBuffer<P, C>>,
+{
+    fn from(value: ImageBuffer<P, C>) -> Self {
+        let img = image::DynamicImage::from(value).to_rgb8();
+
+        let mut buffer: Vec<u8> = Vec::new();
+        let format = image::ImageFormat::Png;
+        img.write_to(&mut Cursor::new(&mut buffer), format).unwrap();
+
+        Self {
+            title: "".to_string(),
+            buffer,
+            format: format.into(),
+            rows: img.height() as _,
+            cols: img.width() as _,
             style: Default::default(),
         }
     }

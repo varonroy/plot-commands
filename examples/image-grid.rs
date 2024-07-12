@@ -33,10 +33,24 @@ fn main() {
             .collect_vec()
     }
 
+    fn gen_image_buf(seed: u32) -> image::ImageBuffer<image::Rgb<f32>, Vec<f32>> {
+        let rows = 10 + seed;
+        let cols = 50 + seed;
+        let img = image::ImageBuffer::from_fn(rows, rows, |x, y| {
+            let r = (x + y) as f32 / ((rows + cols) as f32);
+            let x = x + 5;
+            let g = (x + y) as f32 / ((rows + cols) as f32);
+            let y = y + 5;
+            let b = (x + y) as f32 / ((rows + cols) as f32);
+            image::Rgb([r, g, b])
+        });
+        img
+    }
+
     plot_layout(|b| {
         b.grid_with_rows(
             [
-                plot_image_with(gen_image(0), |b| b.axes()),
+                plot_image_with(gen_image_buf(0), |b| b.axes()),
                 plot_image_with(gen_image(1), |b| b.axes()),
                 plot_image_with(gen_image(2), |b| b.axes()),
                 plot_image_with(gen_image_rgb(0), |b| b.axes()),
